@@ -154,12 +154,19 @@ class Cli(Frontend):
         if goal:
             return
         global Objectif, DimTab
-        
+
         ID = json.dumps(meta).split(',')[0].replace('[','')
-        f = xbmcvfs.File(STRINGS_PATH + "/data.js")
+
+        f = xbmcvfs.File(STRINGS_PATH + "/data.txt")
         content = f.read()
         f.close()
-        Objectif = re.search('case '+ID+'.+?=".+?<strong>(.+?)</strong>', content).group(1).encode('utf-8').decode('unicode-escape')
+
+        #Le deuxieme theme, si il est disponible, est plus juste que le 1er.
+        try:
+            Objectif = re.search('case "'+ID+'.+?=".+?<strong>(.+?)</strong>', content).group(2).encode('utf-8').decode('unicode-escape')
+        except:
+            Objectif = re.search('case '+ID+'.+?=".+?<strong>(.+?)</strong>', content).group(1).encode('utf-8').decode('unicode-escape')  
+                      
         DimTab = [int(json.dumps(meta).split(',')[3]),int(json.dumps(meta).split(u',')[4])]
 
     def handle_challenge(self, ctype, **kwargs):

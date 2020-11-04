@@ -14,7 +14,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with librecaptcha.  If not, see <http://www.gnu.org/licenses/>.
-from __future__ import absolute_import
 from . import pyparsing
 from resources.lib.comaddon import VSlog
 import requests
@@ -44,7 +43,7 @@ def extract_strings(javascript):
 
         elif isinstance(tree, dict):
             if ("type" in tree and tree["type"] == "Literal"
-                and "value" in tree and isinstance(tree[u"value"], unicode)):
+                and "value" in tree and isinstance(tree["value"], str)):
 
                 found.append(tree["value"])
             for value in tree.values():
@@ -56,15 +55,10 @@ def extract_strings(javascript):
 
 
 def extract_and_save(url, path, version, rc_version, user_agent):
-    f = xbmcvfs.File(path + "/data.js", "w")
+    f = xbmcvfs.File(path + "/data.txt", "wb")
     js = load_javascript(url, user_agent)
     strings = extract_strings(js)
     strings_json = json.dumps(strings)
-
-    try:
-        f.write(js)
-    except:
-        f.write(bytearray(js, 'utf_8'))   
-             
+    f.write(str(js))
     f.close()
     return strings
