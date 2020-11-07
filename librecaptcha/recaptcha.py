@@ -17,7 +17,6 @@
 from resources.lib.comaddon import VSlog  # import du dialog progress
 from .errors import UserError
 from .extract_strings import extract_and_save
-from .monotonic import monotonic
 
 from threading import Thread
 
@@ -28,7 +27,6 @@ except:
     from HTMLParser import HTMLParser
     from urlparse import urlparse
     
-
 import requests
 import base64
 import json
@@ -198,7 +196,7 @@ class DynamicSolver(Solver, HasGrid):
         return max(self.get_timeout(i) for i in range(self.num_tiles))
 
     def get_timeout(self, index):
-        elapsed = monotonic() - self.last_request_map[index]
+        elapsed = time.time() - self.last_request_map[index]
         duration = max(DYNAMIC_SELECT_DELAY - elapsed, 0)
         return duration
 
@@ -226,7 +224,7 @@ class DynamicSolver(Solver, HasGrid):
             "ds": "[{}]".format(real_index),
         })
 
-        self.last_request_map[index] = monotonic()
+        self.last_request_map[index] = time.time()
         data = load_rc_json(r.text)
         self.latest_index += 1
         self.tile_index_map[index] = self.latest_index
@@ -440,7 +438,6 @@ class ReCaptcha(object):
         text = self.get("anchor", params={"co": self.co}).text
         parser = Parser()
         parser.feed(text)
-        #VSlog(text)
 
         if not parser.token:
             raise RuntimeError(
@@ -472,11 +469,14 @@ class ReCaptcha(object):
 
     def handle_solved(self, response, **kwargs):
         uvtoken, rresp = self.verify(response)
+
         if rresp is not None:
             self.solve_challenge(rresp)
             return
+
         if not uvtoken:
             raise RuntimeError("Got neither uvtoken nor new rresp.")
+
         self.on_token(uvtoken)
 
     def solve_challenge(self, rresp):
@@ -499,9 +499,11 @@ class ReCaptcha(object):
         }.get(challenge_type)
 
         self.on_challenge(challenge_type)
+
         if handler is None:
             self.on_challenge_unknown(challenge_type)
             return
+
         if solver_class is None:
             handler(challenge_type)
             return
